@@ -3,8 +3,8 @@ package openapi2
 import (
 	"encoding/json"
 	"sort"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 type Parameters []*Parameter
@@ -25,9 +25,9 @@ func (ps Parameters) Less(i, j int) bool {
 
 type Parameter struct {
 	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
+	
 	Ref string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
-
+	
 	In               string              `json:"in,omitempty" yaml:"in,omitempty"`
 	Name             string              `json:"name,omitempty" yaml:"name,omitempty"`
 	Description      string              `json:"description,omitempty" yaml:"description,omitempty"`
@@ -58,12 +58,12 @@ func (parameter Parameter) MarshalJSON() ([]byte, error) {
 	if ref := parameter.Ref; ref != "" {
 		return json.Marshal(openapi3.Ref{Ref: ref})
 	}
-
+	
 	m := make(map[string]interface{}, 24+len(parameter.Extensions))
 	for k, v := range parameter.Extensions {
 		m[k] = v
 	}
-
+	
 	if x := parameter.In; x != "" {
 		m["in"] = x
 	}
@@ -133,7 +133,7 @@ func (parameter Parameter) MarshalJSON() ([]byte, error) {
 	if x := parameter.Default; x != nil {
 		m["default"] = x
 	}
-
+	
 	return json.Marshal(m)
 }
 
@@ -146,7 +146,7 @@ func (parameter *Parameter) UnmarshalJSON(data []byte) error {
 	}
 	_ = json.Unmarshal(data, &x.Extensions)
 	delete(x.Extensions, "$ref")
-
+	
 	delete(x.Extensions, "in")
 	delete(x.Extensions, "name")
 	delete(x.Extensions, "description")
@@ -170,7 +170,7 @@ func (parameter *Parameter) UnmarshalJSON(data []byte) error {
 	delete(x.Extensions, "minLength")
 	delete(x.Extensions, "minItems")
 	delete(x.Extensions, "default")
-
+	
 	*parameter = Parameter(x)
 	return nil
 }

@@ -9,12 +9,12 @@ import (
 	"net/textproto"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func TestValidateCsvFileUpload(t *testing.T) {
@@ -42,17 +42,17 @@ paths:
         '200':
           description: Created
 `
-
+	
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	require.NoError(t, err)
-
+	
 	err = doc.Validate(loader.Context)
 	require.NoError(t, err)
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	tests := []struct {
 		csvData string
 		wantErr bool
@@ -83,29 +83,29 @@ baz,qux,quux`,
 	for _, tt := range tests {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
-
+		
 		{ // Add file data
 			h := make(textproto.MIMEHeader)
 			h.Set("Content-Disposition", `form-data; name="file"; filename="hello.csv"`)
 			h.Set("Content-Type", "text/csv")
-
+			
 			fw, err := writer.CreatePart(h)
 			require.NoError(t, err)
 			_, err = io.Copy(fw, strings.NewReader(tt.csvData))
-
+			
 			require.NoError(t, err)
 		}
-
+		
 		writer.Close()
-
+		
 		req, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(body.Bytes()))
 		require.NoError(t, err)
-
+		
 		req.Header.Set("Content-Type", writer.FormDataContentType())
-
+		
 		route, pathParams, err := router.FindRoute(req)
 		require.NoError(t, err)
-
+		
 		if err = openapi3filter.ValidateRequestBody(
 			context.Background(),
 			&openapi3filter.RequestValidationInput{

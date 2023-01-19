@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func Example() {
@@ -28,12 +28,12 @@ func Example() {
 	if err != nil {
 		panic(err)
 	}
-
+	
 	route, pathParams, err := router.FindRoute(httpReq)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    httpReq,
 		PathParams: pathParams,
@@ -42,14 +42,14 @@ func Example() {
 	if err := openapi3filter.ValidateRequest(ctx, requestValidationInput); err != nil {
 		panic(err)
 	}
-
+	
 	responseValidationInput := &openapi3filter.ResponseValidationInput{
 		RequestValidationInput: requestValidationInput,
 		Status:                 200,
 		Header:                 http.Header{"Content-Type": []string{"application/json"}},
 	}
 	responseValidationInput.SetBodyBytes([]byte(`{}`))
-
+	
 	err = openapi3filter.ValidateResponse(ctx, responseValidationInput)
 	fmt.Println(err)
 	// Output:

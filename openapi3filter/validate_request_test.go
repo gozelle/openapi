@@ -9,13 +9,13 @@ import (
 	"io"
 	"net/http"
 	"testing"
-
+	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func setupTestRouter(t *testing.T, spec string) routers.Router {
@@ -23,13 +23,13 @@ func setupTestRouter(t *testing.T, spec string) routers.Router {
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	require.NoError(t, err)
-
+	
 	err = doc.Validate(loader.Context)
 	require.NoError(t, err)
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	return router
 }
 
@@ -74,9 +74,9 @@ components:
       name: Api-Key
       in: header
 `
-
+	
 	router := setupTestRouter(t, spec)
-
+	
 	verifyAPIKeyPresence := func(c context.Context, input *AuthenticationInput) error {
 		if input.SecurityScheme.Type == "apiKey" {
 			var found bool
@@ -95,7 +95,7 @@ components:
 		}
 		return nil
 	}
-
+	
 	type testRequestBody struct {
 		SubCategory string `json:"subCategory"`
 		Category    string `json:"category,omitempty"`
@@ -188,10 +188,10 @@ components:
 			if tc.args.apiKey != "" {
 				req.Header.Add("Api-Key", tc.args.apiKey)
 			}
-
+			
 			route, pathParams, err := router.FindRoute(req)
 			require.NoError(t, err)
-
+			
 			validationInput := &RequestValidationInput{
 				Request:    req,
 				PathParams: pathParams,
@@ -212,7 +212,7 @@ components:
 			assert.Equal(t, contentLen, bodySize, "expect ContentLength %d to equal body size %d", contentLen, bodySize)
 			bodyModified := originalBodySize != bodySize
 			assert.Equal(t, bodyModified, tc.expectedModification, "expect request body modification happened: %t, expected %t", bodyModified, tc.expectedModification)
-
+			
 			validationInput.Request.Body, err = validationInput.Request.GetBody()
 			assert.NoError(t, err, "unable to re-generate body by GetBody(): %v", err)
 			body2, err := io.ReadAll(validationInput.Request.Body)

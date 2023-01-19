@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func Example() {
@@ -17,12 +17,12 @@ func Example() {
 	if err != nil {
 		panic(err)
 	}
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		route, pathParams, err := router.FindRoute(r)
 		if err != nil {
@@ -30,7 +30,7 @@ func Example() {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
+		
 		err = openapi3filter.ValidateRequest(r.Context(), &openapi3filter.RequestValidationInput{
 			Request:    r,
 			PathParams: pathParams,
@@ -63,7 +63,7 @@ func Example() {
 		}
 	}))
 	defer ts.Close()
-
+	
 	// (note invalid type for name and invalid status)
 	body := strings.NewReader(`{"name": 100, "photoUrls": [], "status": "invalidStatus"}`)
 	req, err := http.NewRequest("POST", ts.URL+"/pet?num=0", body)
@@ -77,7 +77,7 @@ func Example() {
 	}
 	defer resp.Body.Close()
 	fmt.Printf("response: %d %s\n", resp.StatusCode, resp.Body)
-
+	
 	// Output:
 	// ===== Start New Error =====
 	// @body.name:
@@ -136,7 +136,7 @@ func convertError(me openapi3.MultiError) map[string][]string {
 			}
 			issues[field] = append(issues[field], err.Error())
 		case *openapi3filter.RequestError: // possible there were multiple issues that failed validation
-
+			
 			// check if invalid HTTP parameter
 			if err.Parameter != nil {
 				prefix := err.Parameter.In
@@ -144,14 +144,14 @@ func convertError(me openapi3.MultiError) map[string][]string {
 				issues[name] = append(issues[name], err.Error())
 				continue
 			}
-
+			
 			if err, ok := err.Err.(openapi3.MultiError); ok {
 				for k, v := range convertError(err) {
 					issues[k] = append(issues[k], v...)
 				}
 				continue
 			}
-
+			
 			// check if requestBody
 			if err.RequestBody != nil {
 				issues[prefixBody] = append(issues[prefixBody], err.Error())

@@ -14,12 +14,12 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 const validatorSpec = `
@@ -168,11 +168,11 @@ func (h *validatorTestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 func TestValidator(t *testing.T) {
 	doc, err := openapi3.NewLoader().LoadFromData([]byte(validatorSpec))
 	require.NoError(t, err, "failed to load test fixture spec")
-
+	
 	ctx := context.Background()
 	err = doc.Validate(ctx)
 	require.NoError(t, err, "invalid test fixture spec")
-
+	
 	type testRequest struct {
 		method, path, body, contentType string
 	}
@@ -359,22 +359,22 @@ func TestValidator(t *testing.T) {
 				h.ServeHTTP(w, r)
 			}))
 			defer s.Close()
-
+			
 			// Update the OpenAPI servers section with the test server URL This is
 			// needed by the router which matches request routes for OpenAPI
 			// validation.
 			doc.Servers = []*openapi3.Server{{URL: s.URL}}
 			err = doc.Validate(ctx)
 			require.NoError(t, err, "failed to validate with test server")
-
+			
 			// Create the router and validator
 			router, err := gorillamux.NewRouter(doc)
 			require.NoError(t, err, "failed to create router")
-
+			
 			// Now wrap the test handler with the validator middlware
 			v := openapi3filter.NewValidator(router, append(test.options, openapi3filter.Strict(test.strict))...)
 			h = v.Middleware(&test.handler)
-
+			
 			// Test: make a client request
 			var requestBody io.Reader
 			if test.request.body != "" {
@@ -382,7 +382,7 @@ func TestValidator(t *testing.T) {
 			}
 			req, err := http.NewRequest(test.request.method, s.URL+test.request.path, requestBody)
 			require.NoError(t, err, "failed to create request")
-
+			
 			if test.request.contentType != "" {
 				req.Header.Set("Content-Type", test.request.contentType)
 			}
@@ -391,7 +391,7 @@ func TestValidator(t *testing.T) {
 			defer resp.Body.Close()
 			require.Equalf(t, test.response.statusCode, resp.StatusCode,
 				"response code expect %d got %d", test.response.statusCode, resp.StatusCode)
-
+			
 			body, err := ioutil.ReadAll(resp.Body)
 			require.NoError(t, err, "failed to read response body")
 			require.Equalf(t, test.response.body, string(body),
@@ -435,7 +435,7 @@ paths:
 	if err != nil {
 		panic(err)
 	}
-
+	
 	// Square service handler sanity checks inputs, but just crashes on invalid
 	// requests.
 	squareHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -454,7 +454,7 @@ paths:
 			panic(err)
 		}
 	})
-
+	
 	// Start an http server.
 	var mainHandler http.Handler
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -465,7 +465,7 @@ paths:
 		mainHandler.ServeHTTP(w, r)
 	}))
 	defer srv.Close()
-
+	
 	// Patch the OpenAPI spec to match the httptest.Server.URL. Only needed
 	// because the server URL is dynamic here.
 	doc.Servers = []*openapi3.Server{{URL: srv.URL}}
@@ -495,7 +495,7 @@ paths:
 		}))
 	// Now we can finally set the main server handler.
 	mainHandler = v.Middleware(squareHandler)
-
+	
 	printResp := func(resp *http.Response, err error) {
 		if err != nil {
 			panic(err)

@@ -3,8 +3,8 @@ package openapi3filter
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 var _ error = &RequestError{}
@@ -87,6 +87,6 @@ func (err *SecurityRequirementsError) Error() string {
 			buff.WriteString(" | ")
 		}
 	}
-
+	
 	return buff.String()
 }

@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 	"strings"
-
+	
 	"github.com/invopop/yaml"
-
-	"github.com/getkin/kin-openapi/openapi2"
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi2"
+	"github.com/gozelle/openapi/openapi3"
 )
 
 var (
@@ -36,14 +36,14 @@ func main() {
 	flag.Parse()
 	filename := flag.Arg(0)
 	if len(flag.Args()) != 1 || filename == "" {
-		log.Fatalf("Usage: go run github.com/getkin/kin-openapi/cmd/validate@latest [--defaults] [--examples] [--ext] [--patterns] -- <local YAML or JSON file>\nGot: %+v\n", os.Args)
+		log.Fatalf("Usage: go run github.com/gozelle/openapi/cmd/validate@latest [--defaults] [--examples] [--ext] [--patterns] -- <local YAML or JSON file>\nGot: %+v\n", os.Args)
 	}
-
+	
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	
 	var vd struct {
 		OpenAPI string `json:"openapi" yaml:"openapi"`
 		Swagger string `json:"swagger" yaml:"swagger"`
@@ -51,17 +51,17 @@ func main() {
 	if err := yaml.Unmarshal(data, &vd); err != nil {
 		log.Fatal(err)
 	}
-
+	
 	switch {
 	case vd.OpenAPI == "3" || strings.HasPrefix(vd.OpenAPI, "3."):
 		loader := openapi3.NewLoader()
 		loader.IsExternalRefsAllowed = *ext
-
+		
 		doc, err := loader.LoadFromFile(filename)
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		
 		var opts []openapi3.ValidationOption
 		if !*defaults {
 			opts = append(opts, openapi3.DisableSchemaDefaultsValidation())
@@ -72,11 +72,11 @@ func main() {
 		if !*patterns {
 			opts = append(opts, openapi3.DisableSchemaPatternValidation())
 		}
-
+		
 		if err = doc.Validate(loader.Context, opts...); err != nil {
 			log.Fatal(err)
 		}
-
+	
 	case vd.Swagger == "2" || strings.HasPrefix(vd.Swagger, "2."):
 		if *defaults != defaultDefaults {
 			log.Fatal("Flag --defaults is only for OpenAPIv3")
@@ -90,12 +90,12 @@ func main() {
 		if *patterns != defaultPatterns {
 			log.Fatal("Flag --patterns is only for OpenAPIv3")
 		}
-
+		
 		var doc openapi2.T
 		if err := yaml.Unmarshal(data, &doc); err != nil {
 			log.Fatal(err)
 		}
-
+	
 	default:
 		log.Fatal("Missing or incorrect 'openapi' or 'swagger' field")
 	}

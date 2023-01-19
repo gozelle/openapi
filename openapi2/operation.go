@@ -2,13 +2,13 @@ package openapi2
 
 import (
 	"encoding/json"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 type Operation struct {
 	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
+	
 	Summary      string                 `json:"summary,omitempty" yaml:"summary,omitempty"`
 	Description  string                 `json:"description,omitempty" yaml:"description,omitempty"`
 	Deprecated   bool                   `json:"deprecated,omitempty" yaml:"deprecated,omitempty"`

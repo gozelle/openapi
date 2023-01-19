@@ -1,6 +1,6 @@
 package openapi3filter
 
-import "github.com/getkin/kin-openapi/openapi3"
+import "github.com/gozelle/openapi/openapi3"
 
 // DefaultOptions do not set an AuthenticationFunc.
 // A spec with security schemes defined will not pass validation
@@ -11,23 +11,23 @@ var DefaultOptions = &Options{}
 type Options struct {
 	// Set ExcludeRequestBody so ValidateRequest skips request body validation
 	ExcludeRequestBody bool
-
+	
 	// Set ExcludeResponseBody so ValidateResponse skips response body validation
 	ExcludeResponseBody bool
-
+	
 	// Set IncludeResponseStatus so ValidateResponse fails on response
 	// status not defined in OpenAPI spec
 	IncludeResponseStatus bool
-
+	
 	MultiError bool
-
+	
 	// See NoopAuthenticationFunc
 	AuthenticationFunc AuthenticationFunc
-
+	
 	// Indicates whether default values are set in the
 	// request. If true, then they are not set
 	SkipSettingDefaults bool
-
+	
 	customSchemaErrorFunc CustomSchemaErrorFunc
 }
 

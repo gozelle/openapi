@@ -12,11 +12,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-
+	
 	"github.com/gorilla/mux"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
 )
 
 var _ routers.Router = &Router{}
@@ -53,7 +53,7 @@ func NewRouter(doc *openapi3.T) (routers.Router, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	
 	muxRouter := mux.NewRouter().UseEncodedPath()
 	r := &Router{}
 	for _, path := range doc.Paths.InMatchingOrder() {
@@ -63,14 +63,14 @@ func NewRouter(doc *openapi3.T) (routers.Router, error) {
 				return nil, err
 			}
 		}
-
+		
 		operations := pathItem.Operations()
 		methods := make([]string, 0, len(operations))
 		for method := range operations {
 			methods = append(methods, method)
 		}
 		sort.Strings(methods)
-
+		
 		for _, s := range servers {
 			muxRoute := muxRouter.Path(s.base + path).Methods(methods...)
 			if schemes := s.schemes; len(schemes) != 0 {
@@ -142,16 +142,16 @@ func makeServers(in openapi3.Servers) ([]srv, error) {
 			if err != nil {
 				return nil, err
 			}
-
+			
 			servers = append(servers, svr)
 			continue
 		}
-
+		
 		// If a variable represents the port "http://domain.tld:{port}/bla"
 		// then url.Parse() cannot parse "http://domain.tld:`bEncode({port})`/bla"
 		// and mux is not able to set the {port} variable
 		// So we just use the default value for this variable.
-		// See https://github.com/getkin/kin-openapi/issues/367
+		// See https://github.com/gozelle/openapi/issues/367
 		var varsUpdater varsf
 		if lhs := strings.Index(serverURL, ":{"); lhs > 0 {
 			rest := serverURL[lhs+len(":{"):]
@@ -163,7 +163,7 @@ func makeServers(in openapi3.Servers) ([]srv, error) {
 				vars[portVariable] = portValue
 			}
 		}
-
+		
 		svr, err := newSrv(serverURL, server, varsUpdater)
 		if err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func makeServers(in openapi3.Servers) ([]srv, error) {
 	if len(servers) == 0 {
 		servers = append(servers, srv{})
 	}
-
+	
 	return servers, nil
 }
 
@@ -184,7 +184,7 @@ func newSrv(serverURL string, server *openapi3.Server, varsUpdater varsf) (srv, 
 		schemes = permutePart(scheme0, server)
 		serverURL = strings.Replace(serverURL, scheme0+"://", schemes[0]+"://", 1)
 	}
-
+	
 	u, err := url.Parse(bEncode(serverURL))
 	if err != nil {
 		return srv{}, err
@@ -245,7 +245,7 @@ func permutePart(part0 string, srv *openapi3.Server) []string {
 	if len(var2val) == 0 {
 		return []string{part0}
 	}
-
+	
 	partsMap := make(map[string]struct{}, max*len(var2val))
 	for i := 0; i < max; i++ {
 		part := part0

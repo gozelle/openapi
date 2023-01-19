@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/legacy"
 )
 
 const spec = `
@@ -72,12 +72,12 @@ func Example() {
 	if err := doc.Validate(loader.Context); err != nil {
 		panic(err)
 	}
-
+	
 	router, err := legacy.NewRouter(doc)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	p, err := json.Marshal(map[string]interface{}{
 		"pet_type": "Cat",
 		"breed":    "Dingo",
@@ -86,18 +86,18 @@ func Example() {
 	if err != nil {
 		panic(err)
 	}
-
+	
 	req, err := http.NewRequest(http.MethodPost, "/", bytes.NewReader(p))
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,
@@ -108,5 +108,5 @@ func Example() {
 	}
 	// Output:
 	// request body has an error: doesn't match schema: input matches more than one oneOf schemas
-
+	
 }

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func ExampleOptions_WithCustomSchemaErrorFunc() {
@@ -34,40 +34,40 @@ paths:
         '200':
           description: Created
 `
-
+	
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	if err != nil {
 		panic(err)
 	}
-
+	
 	if err = doc.Validate(loader.Context); err != nil {
 		panic(err)
 	}
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	opts := &openapi3filter.Options{}
-
+	
 	opts.WithCustomSchemaErrorFunc(func(err *openapi3.SchemaError) string {
 		return fmt.Sprintf(`field "%s" must be an integer`, err.Schema.Title)
 	})
-
+	
 	req, err := http.NewRequest(http.MethodPost, "/some", strings.NewReader(`{"field":"not integer"}`))
 	if err != nil {
 		panic(err)
 	}
-
+	
 	req.Header.Add("Content-Type", "application/json")
-
+	
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	validationInput := &openapi3filter.RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,
@@ -75,8 +75,8 @@ paths:
 		Options:    opts,
 	}
 	err = openapi3filter.ValidateRequest(context.Background(), validationInput)
-
+	
 	fmt.Println(err.Error())
-
+	
 	// Output: request body has an error: doesn't match schema: field "Some field" must be an integer
 }

@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"sort"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 // ValidateResponse is used to validate the given input according to previous
@@ -26,7 +26,7 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 		return nil
 	}
 	status := input.Status
-
+	
 	// These status codes will never be validated.
 	// TODO: The list is probably missing some.
 	switch status {
@@ -41,7 +41,7 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 	if options == nil {
 		options = DefaultOptions
 	}
-
+	
 	// Find input for the current status
 	responses := route.Operation.Responses
 	if len(responses) == 0 {
@@ -62,7 +62,7 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 	if response == nil {
 		return &ResponseError{Input: input, Reason: "response has not been resolved"}
 	}
-
+	
 	opts := make([]openapi3.SchemaValidationOption, 0, 2)
 	if options.MultiError {
 		opts = append(opts, openapi3.MultiErrors())
@@ -70,7 +70,7 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 	if options.customSchemaErrorFunc != nil {
 		opts = append(opts, openapi3.SetSchemaErrorMessageCustomizer(options.customSchemaErrorFunc))
 	}
-
+	
 	headers := make([]string, 0, len(response.Headers))
 	for k := range response.Headers {
 		if k != headerCT {
@@ -84,18 +84,18 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 			return err
 		}
 	}
-
+	
 	if options.ExcludeResponseBody {
 		// A user turned off validation of a response's body.
 		return nil
 	}
-
+	
 	content := response.Content
 	if len(content) == 0 || options.ExcludeResponseBody {
 		// An operation does not contains a validation schema for responses with this status code.
 		return nil
 	}
-
+	
 	inputMIME := input.Header.Get(headerCT)
 	contentType := content.Get(inputMIME)
 	if contentType == nil {
@@ -104,23 +104,23 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 			Reason: fmt.Sprintf("response header Content-Type has unexpected value: %q", inputMIME),
 		}
 	}
-
+	
 	if contentType.Schema == nil {
 		// An operation does not contains a validation schema for responses with this status code.
 		return nil
 	}
-
+	
 	// Read response's body.
 	body := input.Body
-
+	
 	// Response would contain partial or empty input body
 	// after we begin reading.
 	// Ensure that this doesn't happen.
 	input.Body = nil
-
+	
 	// Ensure we close the reader
 	defer body.Close()
-
+	
 	// Read all
 	data, err := ioutil.ReadAll(body)
 	if err != nil {
@@ -130,10 +130,10 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 			Err:    err,
 		}
 	}
-
+	
 	// Put the data back into the response.
 	input.SetBodyBytes(data)
-
+	
 	encFn := func(name string) *openapi3.Encoding { return contentType.Encoding[name] }
 	_, value, err := decodeBody(bytes.NewBuffer(data), input.Header, contentType.Schema, encFn)
 	if err != nil {
@@ -143,7 +143,7 @@ func ValidateResponse(ctx context.Context, input *ResponseValidationInput) error
 			Err:    err,
 		}
 	}
-
+	
 	// Validate data with the schema.
 	if err := contentType.Schema.Value.VisitJSON(value, append(opts, openapi3.VisitAsResponse())...); err != nil {
 		schemaId := getSchemaIdentifier(contentType.Schema)
@@ -163,7 +163,7 @@ func validateResponseHeader(headerName string, headerRef *openapi3.HeaderRef, in
 	var found bool
 	var sm *openapi3.SerializationMethod
 	dec := &headerParamDecoder{header: input.Header}
-
+	
 	if sm, err = headerRef.Value.SerializationMethod(); err != nil {
 		return &ResponseError{
 			Input:  input,
@@ -171,7 +171,7 @@ func validateResponseHeader(headerName string, headerRef *openapi3.HeaderRef, in
 			Err:    err,
 		}
 	}
-
+	
 	if decodedValue, found, err = decodeValue(dec, headerName, sm, headerRef.Value.Schema, headerRef.Value.Required); err != nil {
 		return &ResponseError{
 			Input:  input,
@@ -179,7 +179,7 @@ func validateResponseHeader(headerName string, headerRef *openapi3.HeaderRef, in
 			Err:    err,
 		}
 	}
-
+	
 	if found {
 		if err = headerRef.Value.Schema.Value.VisitJSON(decodedValue, opts...); err != nil {
 			return &ResponseError{
@@ -202,14 +202,14 @@ func validateResponseHeader(headerName string, headerRef *openapi3.HeaderRef, in
 // a best effort to get a value that can fill that void.
 func getSchemaIdentifier(schema *openapi3.SchemaRef) string {
 	var id string
-
+	
 	if schema != nil {
 		id = strings.TrimSpace(schema.Ref)
 	}
 	if id == "" && schema.Value != nil {
 		id = strings.TrimSpace(schema.Value.Title)
 	}
-
+	
 	return id
 }
 

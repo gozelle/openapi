@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/getkin/kin-openapi/openapi3gen"
+	
+	"github.com/gozelle/openapi/openapi3gen"
 )
 
 type (
@@ -20,18 +20,18 @@ type (
 		Time    time.Time                 `json:"time"`
 		Slice   []SomeOtherType           `json:"slice"`
 		Map     map[string]*SomeOtherType `json:"map"`
-
+		
 		Struct struct {
 			X string `json:"x"`
 		} `json:"struct"`
-
+		
 		EmptyStruct struct {
 			Y string
 		} `json:"structWithoutFields"`
-
+		
 		Ptr *SomeOtherType `json:"ptr"`
 	}
-
+	
 	SomeOtherType string
 )
 
@@ -40,7 +40,7 @@ func Example() {
 	if err != nil {
 		panic(err)
 	}
-
+	
 	data, err := json.MarshalIndent(schemaRef, "", "  ")
 	if err != nil {
 		panic(err)

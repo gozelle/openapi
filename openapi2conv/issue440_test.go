@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi2"
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi2"
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func TestIssue440(t *testing.T) {
@@ -19,7 +19,7 @@ func TestIssue440(t *testing.T) {
 	var doc2 openapi2.T
 	err = json.NewDecoder(doc2file).Decode(&doc2)
 	require.NoError(t, err)
-
+	
 	doc3, err := ToV3(&doc2)
 	require.NoError(t, err)
 	err = doc3.Validate(context.Background())
@@ -28,7 +28,7 @@ func TestIssue440(t *testing.T) {
 		{URL: "https://petstore.swagger.io/v2"},
 		{URL: "http://petstore.swagger.io/v2"},
 	}, doc3.Servers)
-
+	
 	doc2.Host = "your-bot-domain.de"
 	doc2.Schemes = nil
 	doc2.BasePath = ""
@@ -39,7 +39,7 @@ func TestIssue440(t *testing.T) {
 	require.Equal(t, openapi3.Servers{
 		{URL: "https://your-bot-domain.de/"},
 	}, doc3.Servers)
-
+	
 	doc2.Host = "https://your-bot-domain.de"
 	doc2.Schemes = nil
 	doc2.BasePath = ""

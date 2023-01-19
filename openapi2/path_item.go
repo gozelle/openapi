@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 type PathItem struct {
 	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
+	
 	Ref string `json:"$ref,omitempty" yaml:"$ref,omitempty"`
-
+	
 	Delete     *Operation `json:"delete,omitempty" yaml:"delete,omitempty"`
 	Get        *Operation `json:"get,omitempty" yaml:"get,omitempty"`
 	Head       *Operation `json:"head,omitempty" yaml:"head,omitempty"`
@@ -28,7 +28,7 @@ func (pathItem PathItem) MarshalJSON() ([]byte, error) {
 	if ref := pathItem.Ref; ref != "" {
 		return json.Marshal(openapi3.Ref{Ref: ref})
 	}
-
+	
 	m := make(map[string]interface{}, 8+len(pathItem.Extensions))
 	for k, v := range pathItem.Extensions {
 		m[k] = v

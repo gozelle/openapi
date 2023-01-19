@@ -4,16 +4,16 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func TestIssue625(t *testing.T) {
-
+	
 	anyOfArraySpec := `
 openapi: 3.0.0
 info:
@@ -39,12 +39,12 @@ paths:
       '200':
         description: Successful response
 `[1:]
-
+	
 	oneOfArraySpec := strings.ReplaceAll(anyOfArraySpec, "anyOf", "oneOf")
-
+	
 	allOfArraySpec := strings.ReplaceAll(strings.ReplaceAll(anyOfArraySpec, "anyOf", "allOf"),
 		"type: boolean", "type: number")
-
+	
 	tests := []struct {
 		name   string
 		spec   string
@@ -62,7 +62,7 @@ paths:
 			req:    "/items?test=s1,s2",
 			errStr: `parameter "test" in query has an error: path 0: value s1: an invalid boolean: invalid syntax`,
 		},
-
+		
 		{
 			name: "success allof object array",
 			spec: allOfArraySpec,
@@ -86,26 +86,26 @@ paths:
 			errStr: `parameter "test" in query has an error: item 0: decoding oneOf failed: 0 schemas matched`,
 		},
 	}
-
+	
 	for _, testcase := range tests {
 		t.Run(testcase.name, func(t *testing.T) {
 			loader := openapi3.NewLoader()
 			ctx := loader.Context
-
+			
 			doc, err := loader.LoadFromData([]byte(testcase.spec))
 			require.NoError(t, err)
-
+			
 			err = doc.Validate(ctx)
 			require.NoError(t, err)
-
+			
 			router, err := gorillamux.NewRouter(doc)
 			require.NoError(t, err)
 			httpReq, err := http.NewRequest(http.MethodGet, testcase.req, nil)
 			require.NoError(t, err)
-
+			
 			route, pathParams, err := router.FindRoute(httpReq)
 			require.NoError(t, err)
-
+			
 			requestValidationInput := &openapi3filter.RequestValidationInput{
 				Request:    httpReq,
 				PathParams: pathParams,

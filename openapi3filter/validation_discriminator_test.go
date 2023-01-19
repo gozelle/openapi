@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"net/http"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	legacyrouter "github.com/gozelle/openapi/routers/legacy"
 )
 
 func TestValidationWithDiscriminatorSelection(t *testing.T) {
@@ -75,22 +75,22 @@ components:
           value:
             type: integer
 `
-
+	
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	require.NoError(t, err)
-
+	
 	router, err := legacyrouter.NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	body := bytes.NewReader([]byte(`{"discr": "objA", "base64": "S25vY2sgS25vY2ssIE5lbyAuLi4="}`))
 	req, err := http.NewRequest("PUT", "/blob", body)
 	require.NoError(t, err)
 	req.Header.Add(headerCT, "application/json")
-
+	
 	route, pathParams, err := router.FindRoute(req)
 	require.NoError(t, err)
-
+	
 	requestValidationInput := &RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,

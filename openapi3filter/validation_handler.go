@@ -3,10 +3,10 @@ package openapi3filter
 import (
 	"context"
 	"net/http"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
+	legacyrouter "github.com/gozelle/openapi/routers/legacy"
 )
 
 // AuthenticationFunc allows for custom security requirement validation.
@@ -39,7 +39,7 @@ func (h *ValidationHandler) Load() error {
 	if h.router, err = legacyrouter.NewRouter(doc); err != nil {
 		return err
 	}
-
+	
 	// set defaults
 	if h.Handler == nil {
 		h.Handler = http.DefaultServeMux
@@ -50,7 +50,7 @@ func (h *ValidationHandler) Load() error {
 	if h.ErrorEncoder == nil {
 		h.ErrorEncoder = DefaultErrorEncoder
 	}
-
+	
 	return nil
 }
 
@@ -87,11 +87,11 @@ func (h *ValidationHandler) validateRequest(r *http.Request) error {
 	if err != nil {
 		return err
 	}
-
+	
 	options := &Options{
 		AuthenticationFunc: h.AuthenticationFunc,
 	}
-
+	
 	// Validate request
 	requestValidationInput := &RequestValidationInput{
 		Request:    r,
@@ -102,6 +102,6 @@ func (h *ValidationHandler) validateRequest(r *http.Request) error {
 	if err = ValidateRequest(r.Context(), requestValidationInput); err != nil {
 		return err
 	}
-
+	
 	return nil
 }

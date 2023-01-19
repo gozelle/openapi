@@ -5,12 +5,12 @@ import (
 	"context"
 	"net/http/httptest"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	legacyrouter "github.com/gozelle/openapi/routers/legacy"
 )
 
 func TestIssue444(t *testing.T) {
@@ -40,12 +40,12 @@ paths:
 	require.NoError(t, err)
 	router, err := legacyrouter.NewRouter(oas)
 	require.NoError(t, err)
-
+	
 	r := httptest.NewRequest("POST", "/path", bytes.NewReader([]byte(`
 foo: bar
 `)))
 	r.Header.Set("Content-Type", "application/x-yaml")
-
+	
 	openapi3.SchemaErrorDetailsDisabled = true
 	route, pathParams, err := router.FindRoute(r)
 	require.NoError(t, err)

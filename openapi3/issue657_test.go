@@ -2,15 +2,15 @@ package openapi3_test
 
 import (
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func TestOneOf_Warning_Errors(t *testing.T) {
 	t.Parallel()
-
+	
 	loader := openapi3.NewLoader()
 	spec := `
 components:
@@ -30,10 +30,10 @@ components:
               minLength: 15
               maxLength: 15
 `[1:]
-
+	
 	doc, err := loader.LoadFromData([]byte(spec))
 	require.NoError(t, err)
-
+	
 	tests := [...]struct {
 		name     string
 		value    string
@@ -54,25 +54,25 @@ components:
 			value: "ABCDE",
 			checkErr: func(t require.TestingT, err error, i ...interface{}) {
 				require.Equal(t, "doesn't match schema due to: minimum string length is 10\nSchema:\n  {\n    \"maxLength\": 10,\n    \"minLength\": 10,\n    \"title\": \"First rule\",\n    \"type\": \"string\"\n  }\n\nValue:\n  \"ABCDE\"\n Or minimum string length is 15\nSchema:\n  {\n    \"maxLength\": 15,\n    \"minLength\": 15,\n    \"title\": \"Second rule\",\n    \"type\": \"string\"\n  }\n\nValue:\n  \"ABCDE\"\n", err.Error())
-
+				
 				wErr := &openapi3.MultiError{}
 				require.ErrorAs(t, err, wErr)
-
+				
 				require.Len(t, *wErr, 2)
-
+				
 				require.Equal(t, "minimum string length is 10", (*wErr)[0].(*openapi3.SchemaError).Reason)
 				require.Equal(t, "minimum string length is 15", (*wErr)[1].(*openapi3.SchemaError).Reason)
 			},
 		},
 	}
-
+	
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-
+			
 			err = doc.Components.Schemas["Something"].Value.Properties["field"].Value.VisitJSON(test.value)
-
+			
 			test.checkErr(t, err)
 		})
 	}

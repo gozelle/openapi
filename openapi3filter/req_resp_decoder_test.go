@@ -14,11 +14,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	legacyrouter "github.com/gozelle/openapi/routers/legacy"
 )
 
 func TestDecodeParameter(t *testing.T) {
@@ -41,7 +41,7 @@ func TestDecodeParameter(t *testing.T) {
 			}
 			return s
 		}
-
+		
 		integerSchema = &openapi3.SchemaRef{Value: &openapi3.Schema{Type: "integer"}}
 		numberSchema  = &openapi3.SchemaRef{Value: &openapi3.Schema{Type: "number"}}
 		booleanSchema = &openapi3.SchemaRef{Value: &openapi3.Schema{Type: "boolean"}}
@@ -67,7 +67,7 @@ func TestDecodeParameter(t *testing.T) {
 		arraySchema  = arrayOf(stringSchema)
 		objectSchema = objectOf("id", stringSchema, "name", stringSchema)
 	)
-
+	
 	type testCase struct {
 		name   string
 		param  *openapi3.Parameter
@@ -79,7 +79,7 @@ func TestDecodeParameter(t *testing.T) {
 		found  bool
 		err    error
 	}
-
+	
 	testGroups := []struct {
 		name      string
 		testCases []testCase
@@ -1007,14 +1007,14 @@ func TestDecodeParameter(t *testing.T) {
 			},
 		},
 	}
-
+	
 	for _, tg := range testGroups {
 		t.Run(tg.name, func(t *testing.T) {
 			for _, tc := range tg.testCases {
 				t.Run(tc.name, func(t *testing.T) {
 					req, err := http.NewRequest(http.MethodGet, "http://test.org/test"+tc.path, nil)
 					require.NoError(t, err, "failed to create a test request")
-
+					
 					if tc.query != "" {
 						query := req.URL.Query()
 						for _, param := range strings.Split(tc.query, "&") {
@@ -1023,23 +1023,23 @@ func TestDecodeParameter(t *testing.T) {
 						}
 						req.URL.RawQuery = query.Encode()
 					}
-
+					
 					if tc.header != "" {
 						v := strings.Split(tc.header, ":")
 						req.Header.Add(v[0], v[1])
 					}
-
+					
 					if tc.cookie != "" {
 						v := strings.Split(tc.cookie, ":")
 						req.AddCookie(&http.Cookie{Name: v[0], Value: v[1]})
 					}
-
+					
 					path := "/test"
 					if tc.path != "" {
 						path += "/{" + tc.param.Name + "}"
 						tc.param.Required = true
 					}
-
+					
 					info := &openapi3.Info{
 						Title:   "MyAPI",
 						Version: "0.1",
@@ -1055,21 +1055,21 @@ func TestDecodeParameter(t *testing.T) {
 					require.NoError(t, err)
 					router, err := legacyrouter.NewRouter(spec)
 					require.NoError(t, err)
-
+					
 					route, pathParams, err := router.FindRoute(req)
 					require.NoError(t, err)
-
+					
 					input := &RequestValidationInput{Request: req, PathParams: pathParams, Route: route}
 					got, found, err := decodeStyledParameter(tc.param, input)
-
+					
 					require.Truef(t, found == tc.found, "got found: %t, want found: %t", found, tc.found)
-
+					
 					if tc.err != nil {
 						require.Error(t, err)
 						require.Truef(t, matchParseError(err, tc.err), "got error:\n%v\nwant error:\n%v", err, tc.err)
 						return
 					}
-
+					
 					require.NoError(t, err)
 					require.Truef(t, reflect.DeepEqual(got, tc.want), "got %v, want %v", got, tc.want)
 				})
@@ -1080,23 +1080,23 @@ func TestDecodeParameter(t *testing.T) {
 
 func TestDecodeBody(t *testing.T) {
 	boolPtr := func(b bool) *bool { return &b }
-
+	
 	urlencodedForm := make(url.Values)
 	urlencodedForm.Set("a", "a1")
 	urlencodedForm.Set("b", "10")
 	urlencodedForm.Add("c", "c1")
 	urlencodedForm.Add("c", "c2")
-
+	
 	urlencodedSpaceDelim := make(url.Values)
 	urlencodedSpaceDelim.Set("a", "a1")
 	urlencodedSpaceDelim.Set("b", "10")
 	urlencodedSpaceDelim.Add("c", "c1 c2")
-
+	
 	urlencodedPipeDelim := make(url.Values)
 	urlencodedPipeDelim.Set("a", "a1")
 	urlencodedPipeDelim.Set("b", "10")
 	urlencodedPipeDelim.Add("c", "c1|c2")
-
+	
 	d, err := json.Marshal(map[string]interface{}{"d1": "d1"})
 	require.NoError(t, err)
 	multipartForm, multipartFormMime, err := newTestMultipartForm([]*testFormPart{
@@ -1109,32 +1109,32 @@ func TestDecodeBody(t *testing.T) {
 		{name: "g", data: strings.NewReader("g1")},
 	})
 	require.NoError(t, err)
-
+	
 	multipartFormExtraPart, multipartFormMimeExtraPart, err := newTestMultipartForm([]*testFormPart{
 		{name: "a", contentType: "text/plain", data: strings.NewReader("a1")},
 		{name: "x", contentType: "text/plain", data: strings.NewReader("x1")},
 	})
 	require.NoError(t, err)
-
+	
 	multipartAnyAdditionalProps, multipartMimeAnyAdditionalProps, err := newTestMultipartForm([]*testFormPart{
 		{name: "a", contentType: "text/plain", data: strings.NewReader("a1")},
 		{name: "x", contentType: "text/plain", data: strings.NewReader("x1")},
 	})
 	require.NoError(t, err)
-
+	
 	multipartAdditionalProps, multipartMimeAdditionalProps, err := newTestMultipartForm([]*testFormPart{
 		{name: "a", contentType: "text/plain", data: strings.NewReader("a1")},
 		{name: "x", contentType: "text/plain", data: strings.NewReader("x1")},
 	})
 	require.NoError(t, err)
-
+	
 	multipartAdditionalPropsErr, multipartMimeAdditionalPropsErr, err := newTestMultipartForm([]*testFormPart{
 		{name: "a", contentType: "text/plain", data: strings.NewReader("a1")},
 		{name: "x", contentType: "text/plain", data: strings.NewReader("x1")},
 		{name: "y", contentType: "text/plain", data: strings.NewReader("y1")},
 	})
 	require.NoError(t, err)
-
+	
 	testCases := []struct {
 		name     string
 		mime     string
@@ -1289,13 +1289,13 @@ func TestDecodeBody(t *testing.T) {
 				return tc.encoding[name]
 			}
 			_, got, err := decodeBody(tc.body, h, schemaRef, encFn)
-
+			
 			if tc.wantErr != nil {
 				require.Error(t, err)
 				require.Truef(t, matchParseError(err, tc.wantErr), "got error:\n%v\nwant error:\n%v", err, tc.wantErr)
 				return
 			}
-
+			
 			require.NoError(t, err)
 			require.Truef(t, reflect.DeepEqual(got, tc.want), "got %v, want %v", got, tc.want)
 		})
@@ -1313,7 +1313,7 @@ func newTestMultipartForm(parts []*testFormPart) (io.Reader, string, error) {
 	form := &bytes.Buffer{}
 	w := multipart.NewWriter(form)
 	defer w.Close()
-
+	
 	for _, p := range parts {
 		var disp string
 		if p.filename == "" {
@@ -1321,7 +1321,7 @@ func newTestMultipartForm(parts []*testFormPart) (io.Reader, string, error) {
 		} else {
 			disp = fmt.Sprintf("form-data; name=%q; filename=%q", p.name, p.filename)
 		}
-
+		
 		h := make(textproto.MIMEHeader)
 		h.Set(headerCT, p.contentType)
 		h.Set("Content-Disposition", disp)
@@ -1348,26 +1348,26 @@ func TestRegisterAndUnregisterBodyDecoder(t *testing.T) {
 	contentType := "application/csv"
 	h := make(http.Header)
 	h.Set(headerCT, contentType)
-
+	
 	originalDecoder := RegisteredBodyDecoder(contentType)
 	require.Nil(t, originalDecoder)
-
+	
 	RegisterBodyDecoder(contentType, decoder)
 	require.Equal(t, fmt.Sprintf("%v", decoder), fmt.Sprintf("%v", RegisteredBodyDecoder(contentType)))
-
+	
 	body := strings.NewReader("foo,bar")
 	schema := openapi3.NewArraySchema().WithItems(openapi3.NewStringSchema()).NewRef()
 	encFn := func(string) *openapi3.Encoding { return nil }
 	_, got, err := decodeBody(body, h, schema, encFn)
-
+	
 	require.NoError(t, err)
 	require.Equal(t, []string{"foo", "bar"}, got)
-
+	
 	UnregisterBodyDecoder(contentType)
-
+	
 	originalDecoder = RegisteredBodyDecoder(contentType)
 	require.Nil(t, originalDecoder)
-
+	
 	_, _, err = decodeBody(body, h, schema, encFn)
 	require.Equal(t, &ParseError{
 		Kind:   KindUnsupportedFormat,

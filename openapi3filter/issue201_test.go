@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func TestIssue201(t *testing.T) {
@@ -57,18 +57,18 @@ paths:
                 type: string
                 pattern: '^blup$'
 `[1:]
-
+	
 	doc, err := loader.LoadFromData([]byte(spec))
 	require.NoError(t, err)
-
+	
 	err = doc.Validate(ctx)
 	require.NoError(t, err)
-
+	
 	for name, testcase := range map[string]struct {
 		headers map[string]string
 		err     string
 	}{
-
+		
 		"no error": {
 			headers: map[string]string{
 				"X-Blip": "blip",
@@ -77,7 +77,7 @@ paths:
 				"X-Blup": "blup",
 			},
 		},
-
+		
 		"missing non-required header": {
 			headers: map[string]string{
 				"X-Blip": "blip",
@@ -86,7 +86,7 @@ paths:
 				"X-Blup": "blup",
 			},
 		},
-
+		
 		"missing required header": {
 			err: `response header "X-Blip" missing`,
 			headers: map[string]string{
@@ -96,7 +96,7 @@ paths:
 				"X-Blup": "blup",
 			},
 		},
-
+		
 		"invalid required header": {
 			err: `response header "X-Blup" doesn't match schema: string "bluuuuuup" doesn't match the regular expression "^blup$"`,
 			headers: map[string]string{
@@ -110,18 +110,18 @@ paths:
 		t.Run(name, func(t *testing.T) {
 			router, err := gorillamux.NewRouter(doc)
 			require.NoError(t, err)
-
+			
 			r, err := http.NewRequest(http.MethodGet, `/_`, nil)
 			require.NoError(t, err)
-
+			
 			r.Header.Add(headerCT, "application/json")
 			for k, v := range testcase.headers {
 				r.Header.Add(k, v)
 			}
-
+			
 			route, pathParams, err := router.FindRoute(r)
 			require.NoError(t, err)
-
+			
 			err = ValidateResponse(context.Background(), &ResponseValidationInput{
 				RequestValidationInput: &RequestValidationInput{
 					Request:    r,

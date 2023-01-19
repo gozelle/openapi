@@ -2,14 +2,14 @@ package openapi2
 
 import (
 	"encoding/json"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 // T is the root of an OpenAPI v2 document
 type T struct {
 	Extensions map[string]interface{} `json:"-" yaml:"-"`
-
+	
 	Swagger             string                         `json:"swagger" yaml:"swagger"` // required
 	Info                openapi3.Info                  `json:"info" yaml:"info"`       // required
 	ExternalDocs        *openapi3.ExternalDocs         `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`

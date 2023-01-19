@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
 )
 
 func newPetstoreRequest(t *testing.T, method, path string, body io.Reader) *http.Request {
@@ -61,30 +61,30 @@ func getValidationTests(t *testing.T) []*validationTest {
 	require.NoError(t, err)
 	badPath := newPetstoreRequest(t, http.MethodGet, "/watdis", nil)
 	badMethod := newPetstoreRequest(t, http.MethodTrace, "/pet", nil)
-
+	
 	missingBody1 := newPetstoreRequest(t, http.MethodPost, "/pet", nil)
 	missingBody2 := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(``))
-
+	
 	noContentType := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{}`))
 	noContentType.Header.Del(headerCT)
-
+	
 	noContentTypeNeeded := newPetstoreRequest(t, http.MethodGet, "/pet/findByStatus?status=sold", nil)
 	noContentTypeNeeded.Header.Del(headerCT)
-
+	
 	unknownContentType := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{}`))
 	unknownContentType.Header.Set(headerCT, "application/xml")
-
+	
 	unsupportedContentType := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{}`))
 	unsupportedContentType.Header.Set(headerCT, "text/plain")
-
+	
 	unsupportedHeaderValue := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{}`))
 	unsupportedHeaderValue.Header.Set("x-environment", "watdis")
-
+	
 	return []*validationTest{
 		//
 		// Basics
 		//
-
+		
 		{
 			name: "error - unknown host",
 			args: validationArgs{
@@ -130,11 +130,11 @@ func getValidationTests(t *testing.T) []*validationTest {
 			wantErrResponse: &ValidationError{Status: http.StatusBadRequest,
 				Title: "request body has an error: " + ErrInvalidRequired.Error()},
 		},
-
+		
 		//
 		// Content-Type
 		//
-
+		
 		{
 			name: "error - missing content-type on POST",
 			args: validationArgs{
@@ -170,11 +170,11 @@ func getValidationTests(t *testing.T) []*validationTest {
 				r: noContentTypeNeeded,
 			},
 		},
-
+		
 		//
 		// Query strings
 		//
-
+		
 		{
 			name: "error - missing required query string parameter",
 			args: validationArgs{
@@ -293,7 +293,7 @@ func getValidationTests(t *testing.T) []*validationTest {
 				r: newPetstoreRequest(t, http.MethodGet, "/pet/findByKind?kind=dog|bird,with,commas", nil),
 			},
 		},
-
+		
 		//
 		// Request header params
 		//
@@ -312,11 +312,11 @@ func getValidationTests(t *testing.T) []*validationTest {
 				Detail: "value watdis at / must be one of: demo, prod",
 				Source: &ValidationErrorSource{Parameter: "x-environment"}},
 		},
-
+		
 		//
 		// Request bodies
 		//
-
+		
 		{
 			name: "error - invalid enum value for header object attribute",
 			args: validationArgs{
@@ -423,11 +423,11 @@ func getValidationTests(t *testing.T) []*validationTest {
 				r: newPetstoreRequest(t, http.MethodPatch, "/pet", bytes.NewBufferString(`{}`)),
 			},
 		},
-
+		
 		//
 		// Path params
 		//
-
+		
 		{
 			name: "error - missing path param",
 			args: validationArgs{
@@ -467,28 +467,28 @@ func TestValidationHandler_validateRequest(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
-
+			
 			h, err := buildValidationHandler(tt)
 			req.NoError(err)
-
+			
 			err = h.validateRequest(tt.args.r)
 			req.Equal(tt.wantErr, err != nil)
-
+			
 			if err != nil {
 				if tt.wantErrBody != "" {
 					req.Equal(tt.wantErrBody, err.Error())
 				}
-
+				
 				if e, ok := err.(*routers.RouteError); ok {
 					req.Equal(tt.wantErrReason, e.Error())
 					return
 				}
-
+				
 				e, ok := err.(*RequestError)
 				req.True(ok, "not a RequestError: %T -- %#v", err, err)
-
+				
 				req.Equal(tt.wantErrReason, e.Reason)
-
+				
 				if e.Parameter != nil {
 					req.Equal(tt.wantErrParam, e.Parameter.Name)
 					req.Equal(tt.wantErrParamIn, e.Parameter.In)
@@ -496,13 +496,13 @@ func TestValidationHandler_validateRequest(t *testing.T) {
 					req.False(tt.wantErrParam != "" || tt.wantErrParamIn != "",
 						"error = %v, no Parameter -- %#v", e, e)
 				}
-
+				
 				if innerErr, ok := e.Err.(*openapi3.SchemaError); ok {
 					req.Equal(tt.wantErrSchemaReason, innerErr.Reason)
 					pointer := toJSONPointer(innerErr.JSONPointer())
 					req.Equal(tt.wantErrSchemaPath, pointer)
 					req.Equal(fmt.Sprintf("%v", tt.wantErrSchemaValue), fmt.Sprintf("%v", innerErr.Value))
-
+					
 					if originErr, ok := innerErr.Origin.(*openapi3.SchemaError); ok {
 						req.Equal(tt.wantErrSchemaOriginReason, originErr.Reason)
 						pointer := toJSONPointer(originErr.JSONPointer())
@@ -515,7 +515,7 @@ func TestValidationHandler_validateRequest(t *testing.T) {
 					req.False(tt.wantErrSchemaOriginReason != "" || tt.wantErrSchemaOriginPath != "",
 						"error = %v, not a SchemaError with Origin -- %#v", e.Err, e.Err)
 				}
-
+				
 				if innerErr, ok := e.Err.(*ParseError); ok {
 					req.Equal(tt.wantErrParseKind, innerErr.Kind)
 					req.Equal(tt.wantErrParseValue, innerErr.Value)
@@ -535,15 +535,15 @@ func TestValidationErrorEncoder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockEncoder := &mockErrorEncoder{}
 			encoder := &ValidationErrorEncoder{Encoder: mockEncoder.Encode}
-
+			
 			req := require.New(t)
-
+			
 			h, err := buildValidationHandler(tt)
 			req.NoError(err)
-
+			
 			err = h.validateRequest(tt.args.r)
 			req.Equal(tt.wantErr, err != nil)
-
+			
 			if err != nil {
 				encoder.Encode(tt.args.r.Context(), err, httptest.NewRecorder())
 				if tt.wantErrResponse != mockEncoder.Err {
@@ -627,35 +627,35 @@ func TestValidationHandler_ServeHTTP(t *testing.T) {
 		r, err := http.NewRequest(http.MethodGet, "http://unknown-host.com/v2/pet", nil)
 		require.NoError(t, err)
 		r = r.WithContext(httpCtx)
-
+		
 		handler := &testHandler{}
 		encoder := &mockErrorEncoder{}
 		runTest_ServeHTTP(t, handler, encoder.Encode, r)
-
+		
 		require.False(t, handler.Called)
 		require.True(t, encoder.Called)
 		require.Equal(t, httpCtx, encoder.Ctx)
 		require.NotNil(t, encoder.Err)
 	})
-
+	
 	t.Run("passes valid requests through", func(t *testing.T) {
 		r := newPetstoreRequest(t, http.MethodGet, "/pet/findByStatus?status=sold", nil)
-
+		
 		handler := &testHandler{}
 		encoder := &mockErrorEncoder{}
 		runTest_ServeHTTP(t, handler, encoder.Encode, r)
-
+		
 		require.True(t, handler.Called)
 		require.False(t, encoder.Called)
 	})
-
+	
 	t.Run("uses error encoder", func(t *testing.T) {
 		r := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{"name":"Bahama","photoUrls":"http://cat"}`))
-
+		
 		handler := &testHandler{}
 		encoder := &ValidationErrorEncoder{Encoder: (ErrorEncoder)(DefaultErrorEncoder)}
 		resp := runTest_ServeHTTP(t, handler, encoder.Encode, r)
-
+		
 		body, err := ioutil.ReadAll(resp.Body)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
@@ -669,35 +669,35 @@ func TestValidationHandler_Middleware(t *testing.T) {
 		r, err := http.NewRequest(http.MethodGet, "http://unknown-host.com/v2/pet", nil)
 		require.NoError(t, err)
 		r = r.WithContext(httpCtx)
-
+		
 		handler := &testHandler{}
 		encoder := &mockErrorEncoder{}
 		runTest_Middleware(t, handler, encoder.Encode, r)
-
+		
 		require.False(t, handler.Called)
 		require.True(t, encoder.Called)
 		require.Equal(t, httpCtx, encoder.Ctx)
 		require.NotNil(t, encoder.Err)
 	})
-
+	
 	t.Run("passes valid requests through", func(t *testing.T) {
 		r := newPetstoreRequest(t, http.MethodGet, "/pet/findByStatus?status=sold", nil)
-
+		
 		handler := &testHandler{}
 		encoder := &mockErrorEncoder{}
 		runTest_Middleware(t, handler, encoder.Encode, r)
-
+		
 		require.True(t, handler.Called)
 		require.False(t, encoder.Called)
 	})
-
+	
 	t.Run("uses error encoder", func(t *testing.T) {
 		r := newPetstoreRequest(t, http.MethodPost, "/pet", bytes.NewBufferString(`{"name":"Bahama","photoUrls":"http://cat"}`))
-
+		
 		handler := &testHandler{}
 		encoder := &ValidationErrorEncoder{Encoder: (ErrorEncoder)(DefaultErrorEncoder)}
 		resp := runTest_Middleware(t, handler, encoder.Encode, r)
-
+		
 		body, err := ioutil.ReadAll(resp.Body)
 		require.NoError(t, err)
 		require.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
 )
 
 // ValidationErrorEncoder wraps a base ErrorEncoder to handle ValidationErrors
@@ -22,13 +22,13 @@ func (enc *ValidationErrorEncoder) Encode(ctx context.Context, err error, w http
 		enc.Encoder(ctx, cErr, w)
 		return
 	}
-
+	
 	e, ok := err.(*RequestError)
 	if !ok {
 		enc.Encoder(ctx, err, w)
 		return
 	}
-
+	
 	var cErr *ValidationError
 	if e.Err == nil {
 		cErr = convertBasicRequestError(e)
@@ -41,7 +41,7 @@ func (enc *ValidationErrorEncoder) Encode(ctx context.Context, err error, w http
 	} else if innerErr, ok := e.Err.(*openapi3.SchemaError); ok {
 		cErr = convertSchemaError(e, innerErr)
 	}
-
+	
 	if cErr != nil {
 		enc.Encoder(ctx, cErr, w)
 		return
@@ -133,19 +133,19 @@ func convertParseError(e *RequestError, innerErr *ParseError) *ValidationError {
 
 func convertSchemaError(e *RequestError, innerErr *openapi3.SchemaError) *ValidationError {
 	cErr := &ValidationError{Title: innerErr.Reason}
-
+	
 	// Handle "Origin" error
 	if originErr, ok := innerErr.Origin.(*openapi3.SchemaError); ok {
 		cErr = convertSchemaError(e, originErr)
 	}
-
+	
 	// Add http status code
 	if e.Parameter != nil {
 		cErr.Status = http.StatusBadRequest
 	} else if e.RequestBody != nil {
 		cErr.Status = http.StatusUnprocessableEntity
 	}
-
+	
 	// Add error source
 	if e.Parameter != nil {
 		// We have a JSONPointer in the query param too so need to
@@ -154,7 +154,7 @@ func convertSchemaError(e *RequestError, innerErr *openapi3.SchemaError) *Valida
 	} else if ptr := innerErr.JSONPointer(); ptr != nil {
 		cErr.Source = &ValidationErrorSource{Pointer: toJSONPointer(ptr)}
 	}
-
+	
 	// Add details on allowed values for enums
 	if innerErr.SchemaField == "enum" {
 		enums := make([]string, 0, len(innerErr.Schema.Enum))

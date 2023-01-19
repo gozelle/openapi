@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	legacyrouter "github.com/getkin/kin-openapi/routers/legacy"
+	
+	"github.com/gozelle/openapi/openapi3"
+	legacyrouter "github.com/gozelle/openapi/routers/legacy"
 )
 
 func TestValidatingRequestParameterAndSetDefault(t *testing.T) {
@@ -113,7 +113,7 @@ func TestValidatingRequestParameterAndSetDefault(t *testing.T) {
   }
 }
 `
-
+	
 	sl := openapi3.NewLoader()
 	doc, err := sl.LoadFromData([]byte(spec))
 	require.NoError(t, err)
@@ -121,27 +121,27 @@ func TestValidatingRequestParameterAndSetDefault(t *testing.T) {
 	require.NoError(t, err)
 	router, err := legacyrouter.NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	httpReq, err := http.NewRequest(http.MethodGet, "/accounts", nil)
 	require.NoError(t, err)
-
+	
 	params := &url.Values{
 		"q2": []string{"from_request"},
 	}
 	httpReq.URL.RawQuery = params.Encode()
 	httpReq.Header.Set("h2", "false")
 	httpReq.AddCookie(&http.Cookie{Name: "c2", Value: "1024"})
-
+	
 	route, pathParams, err := router.FindRoute(httpReq)
 	require.NoError(t, err)
-
+	
 	err = ValidateRequest(sl.Context, &RequestValidationInput{
 		Request:    httpReq,
 		PathParams: pathParams,
 		Route:      route,
 	})
 	require.NoError(t, err)
-
+	
 	// Unset default values in URL were set
 	require.Equal(t, "Q", httpReq.URL.Query().Get("q1"))
 	// Unset default values in headers were set
@@ -150,14 +150,14 @@ func TestValidatingRequestParameterAndSetDefault(t *testing.T) {
 	cookie, err := httpReq.Cookie("c1")
 	require.NoError(t, err)
 	require.Equal(t, "128", cookie.Value)
-
+	
 	// All values from request were retained
 	require.Equal(t, "from_request", httpReq.URL.Query().Get("q2"))
 	require.Equal(t, "false", httpReq.Header.Get("h2"))
 	cookie, err = httpReq.Cookie("c2")
 	require.NoError(t, err)
 	require.Equal(t, "1024", cookie.Value)
-
+	
 	// Not set value to parameters without default value
 	require.Equal(t, "", httpReq.URL.Query().Get("q3"))
 	require.Equal(t, "", httpReq.Header.Get("h3"))
@@ -406,7 +406,7 @@ func TestValidateRequestBodyAndSetDefault(t *testing.T) {
 	require.NoError(t, err)
 	router, err := legacyrouter.NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	type page struct {
 		Num   int    `json:"num,omitempty"`
 		Size  int    `json:"size,omitempty"`
@@ -438,7 +438,7 @@ func TestValidateRequestBodyAndSetDefault(t *testing.T) {
 		Contact        *contact       `json:"contact,omitempty"`
 		Contact2       *contact       `json:"contact2,omitempty"`
 	}
-
+	
 	testCases := []struct {
 		name          string
 		body          body
@@ -784,17 +784,17 @@ func TestValidateRequestBodyAndSetDefault(t *testing.T) {
 			httpReq, err := http.NewRequest(http.MethodPost, "/accounts", bytes.NewReader(b))
 			require.NoError(t, err)
 			httpReq.Header.Add(headerCT, "application/json")
-
+			
 			route, pathParams, err := router.FindRoute(httpReq)
 			require.NoError(t, err)
-
+			
 			err = ValidateRequest(sl.Context, &RequestValidationInput{
 				Request:    httpReq,
 				PathParams: pathParams,
 				Route:      route,
 			})
 			require.NoError(t, err)
-
+			
 			validatedReqBody, err := ioutil.ReadAll(httpReq.Body)
 			require.NoError(t, err)
 			tc.bodyAssertion(t, string(validatedReqBody))

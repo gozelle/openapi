@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"sort"
 	"testing"
-
+	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
 )
 
 func TestRouter(t *testing.T) {
@@ -72,7 +72,7 @@ func TestRouter(t *testing.T) {
 			},
 		},
 	}
-
+	
 	expect := func(r routers.Router, method string, uri string, operation *openapi3.Operation, params map[string]string) {
 		t.Helper()
 		req, err := http.NewRequest(method, uri, nil)
@@ -128,12 +128,12 @@ func TestRouter(t *testing.T) {
 			}
 		}
 	}
-
+	
 	err := doc.Validate(context.Background())
 	require.NoError(t, err)
 	r, err := NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	expect(r, http.MethodGet, "/not_existing", nil, nil)
 	expect(r, http.MethodDelete, "/hello", helloDELETE, nil)
 	expect(r, http.MethodGet, "/hello", helloGET, nil)
@@ -158,7 +158,7 @@ func TestRouter(t *testing.T) {
 		"bookid": "War.and.Peace",
 	})
 	expect(r, http.MethodPost, "/partial", nil, nil)
-
+	
 	doc.Servers = []*openapi3.Server{
 		{URL: "https://www.example.com/api/v1"},
 		{URL: "{scheme}://{d0}.{d1}.com/api/v1/", Variables: map[string]*openapi3.ServerVariable{
@@ -188,7 +188,7 @@ func TestRouter(t *testing.T) {
 	expect(r, http.MethodGet, "http://127.0.0.1:8000/api/v1/hello", helloGET, map[string]string{
 		"port": "8000",
 	})
-
+	
 	doc.Servers = []*openapi3.Server{
 		{URL: "{server}", Variables: map[string]*openapi3.ServerVariable{
 			"server": {Default: "/api/v1"},
@@ -199,7 +199,7 @@ func TestRouter(t *testing.T) {
 	r, err = NewRouter(doc)
 	require.NoError(t, err)
 	expect(r, http.MethodGet, "https://myserver/api/v1/hello", helloGET, nil)
-
+	
 	{
 		uri := "https://www.example.com/api/v1/onlyGET"
 		expect(r, http.MethodGet, uri, helloGET, nil)
@@ -231,7 +231,7 @@ func TestServerPath(t *testing.T) {
 	server := &openapi3.Server{URL: "http://example.com"}
 	err := server.Validate(context.Background())
 	require.NoError(t, err)
-
+	
 	_, err = NewRouter(&openapi3.T{Servers: openapi3.Servers{
 		server,
 		&openapi3.Server{URL: "http://example.com/"},
@@ -292,12 +292,12 @@ func TestServerOverrideAtPathLevel(t *testing.T) {
 	require.NoError(t, err)
 	router, err := NewRouter(doc)
 	require.NoError(t, err)
-
+	
 	req, err := http.NewRequest(http.MethodGet, "https://another.com/hello", nil)
 	require.NoError(t, err)
 	route, _, err := router.FindRoute(req)
 	require.Equal(t, "/hello", route.Path)
-
+	
 	req, err = http.NewRequest(http.MethodGet, "https://example.com/hello", nil)
 	require.NoError(t, err)
 	route, _, err = router.FindRoute(req)
@@ -488,11 +488,11 @@ func Test_makeServers(t *testing.T) {
 
 func newServerWithVariables(url string, variables map[string]string) *openapi3.Server {
 	var serverVariables = map[string]*openapi3.ServerVariable{}
-
+	
 	for key, value := range variables {
 		serverVariables[key] = newServerVariable(value)
 	}
-
+	
 	return &openapi3.Server{
 		URL:         url,
 		Description: "",

@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"net/textproto"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func Example_validateMultipartFormData() {
@@ -53,7 +53,7 @@ components:
       required:
         - name
 `
-
+	
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	if err != nil {
@@ -62,15 +62,15 @@ components:
 	if err = doc.Validate(loader.Context); err != nil {
 		panic(err)
 	}
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-
+	
 	{ // Add a single "categories" item as part data
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition", `form-data; name="categories"`)
@@ -83,7 +83,7 @@ components:
 			panic(err)
 		}
 	}
-
+	
 	{ // Add a single "categories" item as part data, again
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition", `form-data; name="categories"`)
@@ -96,7 +96,7 @@ components:
 			panic(err)
 		}
 	}
-
+	
 	{ // Add file data
 		fw, err := writer.CreateFormFile("file", "hello.txt")
 		if err != nil {
@@ -106,20 +106,20 @@ components:
 			panic(err)
 		}
 	}
-
+	
 	writer.Close()
-
+	
 	req, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(body.Bytes()))
 	if err != nil {
 		panic(err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-
+	
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
 		panic(err)
 	}
-
+	
 	if err = openapi3filter.ValidateRequestBody(
 		context.Background(),
 		&openapi3filter.RequestValidationInput{

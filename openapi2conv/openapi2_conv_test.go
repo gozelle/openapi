@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi2"
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi2"
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func TestConvOpenAPIV3ToV2(t *testing.T) {
@@ -23,7 +23,7 @@ func TestConvOpenAPIV3ToV2(t *testing.T) {
 		err = doc3.Validate(context.Background())
 		require.NoError(t, err)
 	}
-
+	
 	doc2, err := FromV3(&doc3)
 	require.NoError(t, err)
 	data, err := json.Marshal(doc2)
@@ -43,7 +43,7 @@ func TestConvOpenAPIV3ToV2WithReqBody(t *testing.T) {
 		err = doc3.Validate(context.Background())
 		require.NoError(t, err)
 	}
-
+	
 	doc2, err := FromV3(&doc3)
 	require.NoError(t, err)
 	data, err := json.Marshal(doc2)
@@ -55,7 +55,7 @@ func TestConvOpenAPIV2ToV3(t *testing.T) {
 	var doc2 openapi2.T
 	err := json.Unmarshal([]byte(exampleV2), &doc2)
 	require.NoError(t, err)
-
+	
 	doc3, err := ToV3(&doc2)
 	require.NoError(t, err)
 	err = doc3.Validate(context.Background())

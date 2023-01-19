@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func Test_validateResponseHeader(t *testing.T) {
@@ -177,7 +177,7 @@ func Test_validateResponseHeader(t *testing.T) {
 			if tt.isHeaderPresent {
 				input.Header = map[string][]string{http.CanonicalHeaderKey(tt.args.headerName): tt.headerVals}
 			}
-
+			
 			err := validateResponseHeader(tt.args.headerName, tt.args.headerRef, input, opts)
 			if tt.wantErr {
 				require.NotEmpty(t, tt.wantErrMsg, "wanted error message is not populated")
@@ -210,6 +210,6 @@ func newHeaderRef(schema *openapi3.Schema, required bool) *openapi3.HeaderRef {
 func newArraySchema(schema *openapi3.Schema) *openapi3.Schema {
 	arraySchema := openapi3.NewArraySchema()
 	arraySchema.Items = openapi3.NewSchemaRef("", schema)
-
+	
 	return arraySchema
 }

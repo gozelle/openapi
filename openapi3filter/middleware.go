@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/getkin/kin-openapi/routers"
+	
+	"github.com/gozelle/openapi/routers"
 )
 
 // Validator provides HTTP request and response validation middleware.
@@ -135,16 +135,16 @@ func (v *Validator) Middleware(h http.Handler) http.Handler {
 			v.errFunc(w, http.StatusBadRequest, ErrCodeRequestInvalid, err)
 			return
 		}
-
+		
 		var wr responseWrapper
 		if v.strict {
 			wr = &strictResponseWrapper{w: w}
 		} else {
 			wr = newWarnResponseWrapper(w)
 		}
-
+		
 		h.ServeHTTP(wr, r)
-
+		
 		if err = ValidateResponse(r.Context(), &ResponseValidationInput{
 			RequestValidationInput: requestValidationInput,
 			Status:                 wr.statusCode(),
@@ -158,7 +158,7 @@ func (v *Validator) Middleware(h http.Handler) http.Handler {
 			}
 			return
 		}
-
+		
 		if err = wr.flushBodyContents(); err != nil {
 			v.logFunc("failed to write response", err)
 		}
@@ -167,14 +167,14 @@ func (v *Validator) Middleware(h http.Handler) http.Handler {
 
 type responseWrapper interface {
 	http.ResponseWriter
-
+	
 	// flushBodyContents writes the buffered response to the client, if it has
 	// not yet been written.
 	flushBodyContents() error
-
+	
 	// statusCode returns the response status code, 0 if not set yet.
 	statusCode() int
-
+	
 	// bodyContents returns the buffered
 	bodyContents() []byte
 }

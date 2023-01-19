@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 // CycleError indicates that a type graph has one or more possible cycles.
@@ -67,14 +67,14 @@ func NewSchemaRefForValue(value interface{}, schemas openapi3.Schemas, opts ...O
 
 type Generator struct {
 	opts generatorOpt
-
+	
 	Types map[reflect.Type]*openapi3.SchemaRef
-
+	
 	// SchemaRefs contains all references and their counts.
 	// If count is 1, it's not ne
 	// An OpenAPI identifier has been assigned to each.
 	SchemaRefs map[*openapi3.SchemaRef]int
-
+	
 	// componentSchemaRefs is a set of schemas that must be defined in the components to avoid cycles
 	componentSchemaRefs map[string]struct{}
 }
@@ -158,16 +158,16 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 			return nil, &CycleError{}
 		}
 	}
-
+	
 	if cap(parents) == 0 {
 		parents = make([]*theTypeInfo, 0, 4)
 	}
 	parents = append(parents, typeInfo)
-
+	
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-
+	
 	if strings.HasSuffix(t.Name(), "Ref") {
 		_, a := t.FieldByName("Ref")
 		v, b := t.FieldByName("Value")
@@ -192,16 +192,16 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 			return ref, nil
 		}
 	}
-
+	
 	schema := &openapi3.Schema{}
-
+	
 	switch t.Kind() {
 	case reflect.Func, reflect.Chan:
 		return nil, nil // ignore
-
+	
 	case reflect.Bool:
 		schema.Type = "boolean"
-
+	
 	case reflect.Int:
 		schema.Type = "integer"
 	case reflect.Int8:
@@ -237,17 +237,17 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 		schema.Type = "integer"
 		schema.Min = &zeroInt
 		schema.Max = &maxUint64
-
+	
 	case reflect.Float32:
 		schema.Type = "number"
 		schema.Format = "float"
 	case reflect.Float64:
 		schema.Type = "number"
 		schema.Format = "double"
-
+	
 	case reflect.String:
 		schema.Type = "string"
-
+	
 	case reflect.Slice:
 		if t.Elem().Kind() == reflect.Uint8 {
 			if t == rawMessageType {
@@ -270,7 +270,7 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 				schema.Items = items
 			}
 		}
-
+	
 	case reflect.Map:
 		schema.Type = "object"
 		additionalProperties, err := g.generateSchemaRefFor(parents, t.Elem(), name, tag)
@@ -285,7 +285,7 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 			g.SchemaRefs[additionalProperties]++
 			schema.AdditionalProperties = openapi3.AdditionalProperties{Schema: additionalProperties}
 		}
-
+	
 	case reflect.Struct:
 		if t == timeType {
 			schema.Type = "string"
@@ -320,14 +320,14 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 						}
 					}
 				}
-
+				
 				// extract the field tag if we have a customizer
 				var fieldTag reflect.StructTag
 				if g.opts.schemaCustomizer != nil {
 					ff := getStructField(t, fieldInfo)
 					fieldTag = ff.Tag
 				}
-
+				
 				ref, err := g.generateSchemaRefFor(parents, fType, fieldName, fieldTag)
 				if err != nil {
 					if _, ok := err.(*CycleError); ok && !g.opts.throwErrorOnCycle {
@@ -341,20 +341,20 @@ func (g *Generator) generateWithoutSaving(parents []*theTypeInfo, t reflect.Type
 					schema.WithPropertyRef(fieldName, ref)
 				}
 			}
-
+			
 			// Object only if it has properties
 			if schema.Properties != nil {
 				schema.Type = "object"
 			}
 		}
 	}
-
+	
 	if g.opts.schemaCustomizer != nil {
 		if err := g.opts.schemaCustomizer(name, t, tag, schema); err != nil {
 			return nil, err
 		}
 	}
-
+	
 	return openapi3.NewSchemaRef(t.Name(), schema), nil
 }
 
@@ -378,7 +378,7 @@ func (g *Generator) generateCycleSchemaRef(t reflect.Type, schema *openapi3.Sche
 	default:
 		typeName = t.Name()
 	}
-
+	
 	g.componentSchemaRefs[typeName] = struct{}{}
 	return openapi3.NewSchemaRef(fmt.Sprintf("#/components/schemas/%s", typeName), schema)
 }
@@ -389,7 +389,7 @@ var RefSchemaRef = openapi3.NewSchemaRef("Ref",
 var (
 	timeType       = reflect.TypeOf(time.Time{})
 	rawMessageType = reflect.TypeOf(json.RawMessage{})
-
+	
 	zeroInt   = float64(0)
 	maxInt8   = float64(math.MaxInt8)
 	minInt8   = float64(math.MinInt8)

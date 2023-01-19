@@ -12,10 +12,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/routers"
-	"github.com/getkin/kin-openapi/routers/legacy/pathpattern"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/routers"
+	"github.com/gozelle/openapi/routers/legacy/pathpattern"
 )
 
 // Routers maps a HTTP request to a Router.
@@ -108,7 +108,7 @@ func (router *Router) node() *pathpattern.Node {
 func (router *Router) FindRoute(req *http.Request) (*routers.Route, map[string]string, error) {
 	method, url := req.Method, req.URL
 	doc := router.doc
-
+	
 	// Get server
 	servers := doc.Servers
 	var server *openapi3.Server
@@ -134,7 +134,7 @@ func (router *Router) FindRoute(req *http.Request) (*routers.Route, map[string]s
 			pathParams[name] = value
 		}
 	}
-
+	
 	// Get PathItem
 	root := router.node()
 	var route *routers.Route
@@ -151,7 +151,7 @@ func (router *Router) FindRoute(req *http.Request) (*routers.Route, map[string]s
 			return nil, nil, &routers.RouteError{Reason: routers.ErrMethodNotAllowed.Error()}
 		}
 	}
-
+	
 	if pathParams == nil {
 		pathParams = make(map[string]string, len(paramValues))
 	}

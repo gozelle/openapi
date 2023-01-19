@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
-
+	
 	"github.com/invopop/yaml"
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi2"
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi2"
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func v2v3JSON(spec2 []byte) (doc3 *openapi3.T, err error) {
@@ -100,12 +100,12 @@ func TestIssue187(t *testing.T) {
 `
 	doc3, err := v2v3JSON([]byte(spec))
 	require.NoError(t, err)
-
+	
 	spec3, err := json.Marshal(doc3)
 	require.NoError(t, err)
 	const expected = `{"components":{"schemas":{"model.ProductSearchAttributeRequest":{"properties":{"filterField":{"type":"string"},"filterKey":{"type":"string"},"type":{"type":"string"},"values":{"$ref":"#/components/schemas/model.ProductSearchAttributeValueRequest"}},"title":"model.ProductSearchAttributeRequest","type":"object"},"model.ProductSearchAttributeValueRequest":{"properties":{"imageUrl":{"type":"string"},"text":{"type":"string"}},"title":"model.ProductSearchAttributeValueRequest","type":"object"}}},"info":{"contact":{"email":"test@test.com","name":"Test"},"description":"Test Golang Application","title":"Test","version":"1.0"},"openapi":"3.0.3","paths":{"/me":{"get":{"operationId":"someTest","responses":{"200":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/model.ProductSearchAttributeRequest"}}},"description":"successful operation"}},"summary":"Some test","tags":["probe"]}}}}`
 	require.JSONEq(t, string(spec3), expected)
-
+	
 	err = doc3.Validate(context.Background())
 	require.NoError(t, err)
 }
@@ -136,7 +136,7 @@ definitions:
 `
 	doc3, err := v2v3YAML([]byte(spec))
 	require.NoError(t, err)
-
+	
 	spec3, err := yaml.Marshal(doc3)
 	require.NoError(t, err)
 	const expected = `components:
@@ -164,7 +164,7 @@ paths:
           description: description
 `
 	require.YAMLEq(t, string(spec3), expected)
-
+	
 	err = doc3.Validate(context.Background())
 	require.NoError(t, err)
 }
@@ -187,7 +187,7 @@ securityDefinitions:
 	require.NotNil(t, doc3.Components.SecuritySchemes["OAuth2Application"].Value.Flows.ClientCredentials)
 	_, err = yaml.Marshal(doc3)
 	require.NoError(t, err)
-
+	
 	doc2, err := FromV3(doc3)
 	require.NoError(t, err)
 	require.Equal(t, doc2.SecurityDefinitions["OAuth2Application"].Flow, "application")

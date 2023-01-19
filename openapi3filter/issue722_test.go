@@ -9,10 +9,10 @@ import (
 	"net/textproto"
 	"strings"
 	"testing"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func TestValidateMultipartFormDataContainingAllOf(t *testing.T) {
@@ -54,7 +54,7 @@ components:
       required:
       - name
 `
-
+	
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromData([]byte(spec))
 	if err != nil {
@@ -63,15 +63,15 @@ components:
 	if err = doc.Validate(loader.Context); err != nil {
 		t.Fatal(err)
 	}
-
+	
 	router, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-
+	
 	{ // Add file data
 		fw, err := writer.CreateFormFile("file", "hello.txt")
 		if err != nil {
@@ -81,7 +81,7 @@ components:
 			t.Fatal(err)
 		}
 	}
-
+	
 	{ // Add a single "name" item as part data
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition", `form-data; name="name"`)
@@ -93,7 +93,7 @@ components:
 			t.Fatal(err)
 		}
 	}
-
+	
 	{ // Add a single "discription" item as part data
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition", `form-data; name="description"`)
@@ -105,20 +105,20 @@ components:
 			t.Fatal(err)
 		}
 	}
-
+	
 	writer.Close()
-
+	
 	req, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(body.Bytes()))
 	if err != nil {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-
+	
 	route, pathParams, err := router.FindRoute(req)
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	
 	if err = openapi3filter.ValidateRequestBody(
 		context.Background(),
 		&openapi3filter.RequestValidationInput{

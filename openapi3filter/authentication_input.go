@@ -2,8 +2,8 @@ package openapi3filter
 
 import (
 	"fmt"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 type AuthenticationInput struct {

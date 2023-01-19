@@ -4,16 +4,16 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers/gorillamux"
+	
+	"github.com/gozelle/openapi/openapi3"
+	"github.com/gozelle/openapi/openapi3filter"
+	"github.com/gozelle/openapi/routers/gorillamux"
 )
 
 func TestIssue641(t *testing.T) {
-
+	
 	anyOfSpec := `
 openapi: 3.0.0
 info:
@@ -38,16 +38,16 @@ paths:
       '200':
         description: Successful response
 `[1:]
-
+	
 	allOfSpec := strings.ReplaceAll(anyOfSpec, "anyOf", "allOf")
-
+	
 	tests := []struct {
 		name   string
 		spec   string
 		req    string
 		errStr string
 	}{
-
+		
 		{
 			name: "success anyof pattern",
 			spec: anyOfSpec,
@@ -59,7 +59,7 @@ paths:
 			req:    "/items?test=999999",
 			errStr: `parameter "test" in query has an error: Doesn't match schema "anyOf"`,
 		},
-
+		
 		{
 			name: "success allof pattern",
 			spec: allOfSpec,
@@ -72,26 +72,26 @@ paths:
 			errStr: `parameter "test" in query has an error: string "999999" doesn't match the regular expression "^[0-9]{1,4}$"`,
 		},
 	}
-
+	
 	for _, testcase := range tests {
 		t.Run(testcase.name, func(t *testing.T) {
 			loader := openapi3.NewLoader()
 			ctx := loader.Context
-
+			
 			doc, err := loader.LoadFromData([]byte(testcase.spec))
 			require.NoError(t, err)
-
+			
 			err = doc.Validate(ctx)
 			require.NoError(t, err)
-
+			
 			router, err := gorillamux.NewRouter(doc)
 			require.NoError(t, err)
 			httpReq, err := http.NewRequest(http.MethodGet, testcase.req, nil)
 			require.NoError(t, err)
-
+			
 			route, pathParams, err := router.FindRoute(httpReq)
 			require.NoError(t, err)
-
+			
 			requestValidationInput := &openapi3filter.RequestValidationInput{
 				Request:    httpReq,
 				PathParams: pathParams,

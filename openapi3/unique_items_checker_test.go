@@ -3,10 +3,10 @@ package openapi3_test
 import (
 	"strings"
 	"testing"
-
+	
 	"github.com/stretchr/testify/require"
-
-	"github.com/getkin/kin-openapi/openapi3"
+	
+	"github.com/gozelle/openapi/openapi3"
 )
 
 func TestRegisterArrayUniqueItemsChecker(t *testing.T) {
@@ -18,11 +18,11 @@ func TestRegisterArrayUniqueItemsChecker(t *testing.T) {
 		}
 		val = []interface{}{"1", "2", "3"}
 	)
-
+	
 	// Fist checked by predefined function
 	err := schema.VisitJSON(val)
 	require.NoError(t, err)
-
+	
 	// Register a function will always return false when check if a
 	// slice has unique items, then use a slice indeed has unique
 	// items to verify that check unique items will failed.
@@ -30,7 +30,7 @@ func TestRegisterArrayUniqueItemsChecker(t *testing.T) {
 		return false
 	})
 	defer openapi3.RegisterArrayUniqueItemsChecker(nil) // Reset for other tests
-
+	
 	err = schema.VisitJSON(val)
 	require.Error(t, err)
 	require.True(t, strings.HasPrefix(err.Error(), "duplicate items found"))
