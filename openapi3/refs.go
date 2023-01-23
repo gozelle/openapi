@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-
+	
 	"github.com/go-openapi/jsonpointer"
 	"github.com/perimeterx/marshmallow"
 )
@@ -57,7 +57,7 @@ func (x *CallbackRef) Validate(ctx context.Context, opts ...ValidationOption) er
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -134,7 +134,7 @@ func (x *ExampleRef) Validate(ctx context.Context, opts ...ValidationOption) err
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -211,7 +211,7 @@ func (x *HeaderRef) Validate(ctx context.Context, opts ...ValidationOption) erro
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -288,7 +288,7 @@ func (x *LinkRef) Validate(ctx context.Context, opts ...ValidationOption) error 
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -341,6 +341,9 @@ func (x ParameterRef) MarshalJSON() ([]byte, error) {
 	if ref := x.Ref; ref != "" {
 		return json.Marshal(Ref{Ref: ref})
 	}
+	if x.Value == nil {
+		return nil, nil
+	}
 	return x.Value.MarshalJSON()
 }
 
@@ -365,7 +368,7 @@ func (x *ParameterRef) Validate(ctx context.Context, opts ...ValidationOption) e
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -442,7 +445,7 @@ func (x *RequestBodyRef) Validate(ctx context.Context, opts ...ValidationOption)
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -519,7 +522,7 @@ func (x *ResponseRef) Validate(ctx context.Context, opts ...ValidationOption) er
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -596,7 +599,7 @@ func (x *SchemaRef) Validate(ctx context.Context, opts ...ValidationOption) erro
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
@@ -673,7 +676,7 @@ func (x *SecuritySchemeRef) Validate(ctx context.Context, opts ...ValidationOpti
 	ctx = WithValidationOptions(ctx, opts...)
 	if extra := x.extra; len(extra) != 0 {
 		sort.Strings(extra)
-
+		
 		extras := make([]string, 0, len(extra))
 		allowed := getValidationOptions(ctx).extraSiblingFieldsAllowed
 		if allowed == nil {
