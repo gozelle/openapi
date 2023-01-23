@@ -342,7 +342,7 @@ func (x ParameterRef) MarshalJSON() ([]byte, error) {
 		return json.Marshal(Ref{Ref: ref})
 	}
 	if x.Value == nil {
-		return []byte{}, nil
+		return nil, fmt.Errorf("ParameterRef.Value is nil")
 	}
 	return x.Value.MarshalJSON()
 }
